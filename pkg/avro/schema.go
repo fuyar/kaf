@@ -1,7 +1,9 @@
 package avro
 
 import (
+	"crypto/tls"
 	"encoding/binary"
+	"net/http"
 	"sync"
 
 	schemaregistry "github.com/Landoop/schema-registry"
@@ -25,7 +27,20 @@ type SchemaCache struct {
 
 // NewSchemaCache returns a new Cache instance
 func NewSchemaCache(url string) (*SchemaCache, error) {
-	client, err := schemaregistry.NewClient(url)
+
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+
+	httpsClientTransport := &http.Transport{
+		TLSClientConfig: tlsConfig,
+	}
+
+	httpsClient := &http.Client{
+		Transport: httpsClientTransport,
+	}
+
+	client, err := schemaregistry.NewClient(url, schemaregistry.UsingClient(httpsClient))
 	if err != nil {
 		return nil, err
 	}
